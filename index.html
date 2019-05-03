@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>NYC EMS Dispatch Visualization</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script-->
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<!--Nav Bar-->
+<!--nav id="menu"></nav-->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">NYC EMS Dispatch Visualization</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a onclick="responseTimeAnalysis()">Response Time Analysis</a></li>
+                <li><a onclick="incidentAnalysis()">Incident Analysis</a></li>
+                <li><a onclick="cityWideAnalysis()">City-Wide Analysis</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!--NYC Map -->
+<div>
+    <div id="map"></div>
+</div>
+
+
+
+<!--Filter-->
+<!--responseTimeFilter-->
+<div id="responseTimeFilter" class="filter">
+    <div style="margin-left: 15px">
+        <table>
+            <tr>
+                <td>
+                    <p style="font-size: 20px;">
+                        Response Time Analysis
+                    </p>
+                </td>
+            </tr>
+            <!--tr>
+                <td>
+                    <p>Darkness of color represent the average response time among different zipcode districts, the darker the longer and vice versa</p>
+                </td>
+            </tr-->
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Severity" checked>&ensp;Year</label>
+                </td>
+            </tr>
+            <tr>
+                <td class="d-flex justify-content-center my-4 pt-3">
+                    <form class="range-field w-1">
+                        <input class="border-0" type="range" id="newYearSlider" min="2013" max="2017" />
+                    </form>
+                    <P>2013&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;2017</P>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Severity" checked>&ensp;Severity</label>
+                </td>
+            </tr>
+            <tr>
+                <td class="d-flex justify-content-center my-4 pt-3">
+                    <form class="range-field w-1">
+                        <input class="border-0" type="range" id="severitySlider" min="1" max="7" />
+                    </form>
+                    <P>7&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;1</P>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Temperature" checked>&ensp;Temperature</label>
+                    <!--p>Temperature</p-->
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <form class="range-field w-1">
+                        <input class="border-0" type="range" id="tempSlider" min="0" max="1" />
+                    </form>
+                    <P><0&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;>0</P>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <!--label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Time" checked>&ensp;Time</label-->
+                    <p>Time</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="daynightrain" id="day" onclick="getResponseTimeAnalysisRadios2()"  autocomplete="off"><img src="media_source/DAY.png" style="width: 25px; height: 20px;" ">&ensp;&ensp;Day
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="daynightrain" id="night" onclick="getResponseTimeAnalysisRadios3()"  autocomplete="off"><img src="media_source/NIGHT.png" style="width: 20px; height: 20px;"">&ensp;&ensp;Night
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <p>&ensp;&ensp;</p>
+            </tr>
+            <tr>
+                <td>
+                    <!--label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Weather" checked>&ensp;Weather</label-->
+                    <p style="margin-top: 10px">Weather</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="daynightrain" id="sunny" onclick="getResponseTimeAnalysisRadios4()" autocomplete="off"><img src="media_source/DAY.png" style="width: 25px; height: 20px;" ">&ensp;&ensp;Sunny
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="daynightrain" id="rainy" onclick="getResponseTimeAnalysisRadios5()" autocomplete="off"><img src="media_source/RAINY.png" style="width: 20px; height: 20px;"">&ensp;&ensp;Rainy
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-primary" style="margin-top: 10px" onclick="responseTimeAnalysisSwitch()">View Analysis</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!--incidentFilter-->
+<div id="incidentFilter" class="filter" style="display: none;">
+    <div style="margin-left: 15px">
+        <table>
+            <tr>
+                <td>
+                    <p style="font-size: 20px;">
+                        Incident Analysis
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <!--label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Location" checked>&ensp;Location</label-->
+                    <p>Location</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios1()" checked>&ensp;Bronx</label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios2()" checked>&ensp;Brooklyn</label><br>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios3()" checked>&ensp;Manhattan</label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios4()" checked>&ensp;Queens</label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios5()" checked>&ensp;Richmond/Staten Island</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <!--label><input type="radio" name="responseTimeFilterRadio" onclick="getResponseTimeAnalysisRadios()" value="Temperature" checked>&ensp;Incident Type</label-->
+                    <p>Incident Type</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <!--form class="range-field w-1">
+                        <input class="border-0" type="range" id="tempSlider" min="0" max="1" />
+                    </form>
+                    <P><0&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;>0</P-->
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios6()" checked><font color="#c68b45">&ensp;ABDPN&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios7()" checked><font color="#3326a9">&ensp;CARD&ensp;</font></label><br>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios8()" checked><font color="#c96bea">&ensp;DIFFBR&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios9()" checked><font color="#134b69">&ensp;DRUG&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios10()" checked><font color="#ebb8f1">&ensp;EDP&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios11()" checked><font color="#2f2368">&ensp;INJURY&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios12()" checked><font color="#a24ffe">&ensp;SICK&ensp;</font></label
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios13()" checked><font color="#776e72">&ensp;UNC&ensp;</font></label>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios14()" checked><font color="#c2391b">&ensp;UNKNOW&ensp;</font></label
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getIncidentAnalysisRadios15()" checked>&ensp;Date</label>
+                    <p>(New Year, Easter, National day, Thanksgiving, and Christmas)</p>
+                </td>
+            </tr>
+            <tr>
+                <td class="d-flex justify-content-center my-4 pt-3">
+                    <form class="range-field w-1">
+                        <input class="border-0" type="range" id="yearSlider" min="2013" max="2017" />
+                    </form>
+                    <P>2013&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;2017</P>
+                </td>
+            </tr>
+            <tr>
+                <td class="d-flex justify-content-center my-4 pt-3">
+                    <form class="range-field w-1">
+                        <input class="border-0" type="range" id="dateSlider" min="0" max="4" />
+                    </form>
+                    <P>01/01&ensp;&ensp;&ensp;03/31&ensp;&ensp;&ensp;&ensp;07/04&ensp;&ensp;&ensp;11/30&ensp;&ensp;&ensp;&ensp;12/24</P>
+                </td>
+            </tr>
+            <tr>
+                <p>&ensp;&ensp;</p>
+            </tr>
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-primary" style="margin-top: 10px" onclick="incidentAnalysisSwitch()">View Analysis</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--button><a onclick="incidentAnalysisSwitch()">View Analysis</a></button-->
+</div>
+
+<!--cityWideFilter-->
+<div id="cityWideFilter" class="filter" style="display: none;">
+    <div style="margin-left: 15px">
+        <table>
+            <tr>
+                <td>
+                    <p>&ensp;</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p style="font-size: 20px;">
+                        City-Wide Analysis
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getCityWideAnalysisRadios1()"  checked>&ensp;Gun Shot</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label><input type="radio" name="responseTimeFilterRadio" onclick="getCityWideAnalysisRadios2()"  checked>&ensp;Drug</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-primary" style="margin-top: 10px" onclick="cityWideAnalysisSwitch()">View Analysis</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--button><a onclick="cityWideAnalysisSwitch()">View Analysis</a></button-->
+</div>
+
+<!--Analysis-->
+<!--div id="side-bar"></div-->
+
+<!--Response Time Analysis-->
+<div id="responseTimeAnalysisGraph">
+    <div class='tableauPlaceholder' id='viz1556791961875' style='position: relative'>
+        <noscript>
+            <a href='#'>
+                <img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;re&#47;responsetimeanalysis&#47;Story1&#47;1_rss.png' style='border: none' />
+            </a>
+        </noscript>
+        <object class='tableauViz'  style='display:none;'>
+            <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+            <param name='embed_code_version' value='3' />
+            <param name='site_root' value='' />
+            <param name='name' value='responsetimeanalysis&#47;Story1' />
+            <param name='tabs' value='no' />
+            <param name='toolbar' value='yes' />
+            <param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;re&#47;responsetimeanalysis&#47;Story1&#47;1.png' />
+            <param name='animate_transition' value='yes' />
+            <param name='display_static_image' value='yes' />
+            <param name='display_spinner' value='yes' />
+            <param name='display_overlay' value='yes' />
+            <param name='display_count' value='yes' />
+            <param name='filter' value='publish=yes' />
+        </object>
+    </div>
+</div>
+
+<!--Incident Analysis-->
+<div id="incidentAnalysisPic" style="display: none;">
+    <div class='tableauPlaceholder' id='viz1556730343629' style='position: relative'>
+        <noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;fa&#47;fatilityrate&#47;Dashboard6&#47;1_rss.png' style='border: none' /></a></noscript>
+        <object class='tableauViz'  style='display:none;'>
+            <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+            <param name='embed_code_version' value='3' />
+            <param name='site_root' value='' />
+            <param name='name' value='fatilityrate&#47;Dashboard6' />
+            <param name='tabs' value='no' />
+            <param name='toolbar' value='yes' />
+            <param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;fa&#47;fatilityrate&#47;Dashboard6&#47;1.png' />
+            <param name='animate_transition' value='yes' />
+            <param name='display_static_image' value='yes' />
+            <param name='display_spinner' value='yes' />
+            <param name='display_overlay' value='yes' />
+            <param name='display_count' value='yes' />
+            <param name='filter' value='publish=yes' />
+        </object>
+    </div>
+</div>
+
+<!--City-Wide Analysis-->
+<div id="cityWideAnalysisPic" style="display: none;">
+    <div class='tableauPlaceholder' id='viz1556805909264' style='position: relative'>
+        <noscript>
+            <a href='#'>
+                <img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Bo&#47;Book2_15567306219810&#47;Story1&#47;1_rss.png' style='border: none' />
+            </a>
+        </noscript>
+        <object class='tableauViz'  style='display:none;'>
+            <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+            <param name='embed_code_version' value='3' />
+            <param name='site_root' value='' />
+            <param name='name' value='Book2_15567306219810&#47;Story1' />
+            <param name='tabs' value='no' />
+            <param name='toolbar' value='yes' />
+            <param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Bo&#47;Book2_15567306219810&#47;Story1&#47;1.png' />
+            <param name='animate_transition' value='yes' />
+            <param name='display_static_image' value='yes' />
+            <param name='display_spinner' value='yes' />
+            <param name='display_overlay' value='yes' />
+            <param name='display_count' value='yes' />
+            <param name='filter' value='publish=yes' />
+        </object>
+    </div>
+</div>
+
+<script src="js/map_init.js"></script>
+<script src="js/layers.js"></script>
+<script src="js/analysisPick.js"></script>
+<script src="js/sidebar1.js"></script>
+<script src="js/sidebar2.js"></script>
+<script src="js/sidebar3.js"></script>
+<!--script src="js/sidebar.js"></script-->
+
+
+<div class='tableauPlaceholder' id='viz1556698989494' style='position: relative'>
+   <noscript><a href='#'><img alt=' ' src='https://public.tableau.com/static/images/se/severityv_s_rpt/Sheet1/1_rss.png' style='border: none' /></a></noscript>
+   <object class='tableauViz'  style='display:none;'>
+      <param name='embed_code_version' value='3' />
+      <param name='site_root' value='' />
+      <param name='name' value='severityv_s_rpt/Sheet1' />
+      <param name='tabs' value='no' />
+      <param name='static_image' value='https://public.tableau.com/static/images/se/severityv_s_rpt/Sheet1/1.png' />
+      <param name='animate_transition' value='yes' />
+      <param name='display_static_image' value='yes' />
+      <param name='display_spinner' value='yes' />
+      <param name='display_overlay' value='yes' />
+      <param name='display_count' value='yes' />
+
+   </object>
+</div>
+<script type='text/javascript'>                    var divElement = document.getElementById('viz1556698989494');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+</body>
+</html>
